@@ -4,7 +4,7 @@ const crypto = require('crypto');
 
 // Configuration
 const CONFIG = {
-    mediaFolder: './root media folder', // Change this to your media folder path (relative or absolute)
+    mediaFolder: './media', // Change this to your media folder path (relative or absolute)
     outputFile: './gallery.html', // Output HTML file location
     tagsFile: './media-tags.json', // JSON file to store tags for each media file
     supportedImages: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'],
@@ -735,6 +735,163 @@ function generateHTML() {
         .modal-content video.dragging {
             cursor: grabbing;
         }
+
+        /* Multi-view grid */
+        .modal-content.multi-view {
+            display: grid;
+            gap: 1rem;
+            padding: 2rem;
+        }
+
+        .modal-content.multi-view.count-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .modal-content.multi-view.count-3 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .modal-content.multi-view.count-3 .media-slot:first-child {
+            grid-column: 1 / -1;
+        }
+
+        .modal-content.multi-view.count-4 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .media-slot {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 200px;
+        }
+
+        .media-slot img,
+        .media-slot video {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .media-slot .slot-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 107, 107, 0.9);
+            border: none;
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: background 0.3s ease;
+        }
+
+        .media-slot .slot-close:hover {
+            background: rgba(255, 107, 107, 1);
+        }
+
+        .media-slot .slot-label {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #4ecdc4;
+            z-index: 10;
+        }
+
+        /* Rotation controls */
+        .rotation-controls {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 1001;
+            background: rgba(26, 26, 26, 0.95);
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+
+        .rotation-btn {
+            padding: 0.5rem 0.8rem;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .rotation-btn:hover {
+            background: #3a3a3a;
+            border-color: #4ecdc4;
+        }
+
+        /* Multi-view controls */
+        .multi-view-controls {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 1001;
+            background: rgba(26, 26, 26, 0.95);
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+
+        .multi-view-btn {
+            padding: 0.5rem 1rem;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .multi-view-btn:hover {
+            background: #3a3a3a;
+            border-color: #4ecdc4;
+        }
+
+        .multi-view-btn.active {
+            background: #4ecdc4;
+            color: #000;
+            border-color: #4ecdc4;
+        }
+
+        .multi-view-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         
         .modal-close {
             position: absolute;
@@ -923,6 +1080,18 @@ function generateHTML() {
         <button class="modal-nav modal-prev" onclick="navigateModal(-1)">&#8249;</button>
         <button class="modal-nav modal-next" onclick="navigateModal(1)">&#8250;</button>
         <button class="edit-tags-btn" onclick="toggleTagEditor()">🏷️ Edit Tags</button>
+        
+        <div class="rotation-controls" id="rotationControls">
+            <button class="rotation-btn" onclick="rotateMedia(-90)" title="Rotate Left">↶ 90°</button>
+            <button class="rotation-btn" onclick="rotateMedia(90)" title="Rotate Right">↷ 90°</button>
+            <button class="rotation-btn" onclick="resetRotation()" title="Reset">↺ Reset</button>
+        </div>
+        
+        <div class="multi-view-controls" id="multiViewControls">
+            <button class="multi-view-btn" onclick="toggleMultiView()" id="multiViewToggle">+ Add to Compare</button>
+            <button class="multi-view-btn" onclick="clearMultiView()" id="clearMultiView" style="display: none;">Clear All</button>
+        </div>
+        
         <div class="modal-content" id="modalContent"></div>
         <div class="volume-indicator" id="volumeIndicator"></div>
         <div class="tag-editor" id="tagEditor" style="display: none;">
@@ -966,6 +1135,9 @@ function generateHTML() {
         let tagEditorOpen = false;
         let autocompleteSelectedIndex = -1;
         let autocompleteMatches = [];
+        let currentRotation = 0;
+        let multiViewMode = false;
+        let multiViewSlots = []; // Array of {index, rotation}
         
         // Check if media data is empty
         if (mediaData.length === 0) {
@@ -1147,15 +1319,25 @@ function generateHTML() {
                         } else {
                             closeModal();
                         }
-                    } else if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.shiftKey && !tagEditorOpen) {
+                    } else if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.shiftKey && !tagEditorOpen && !multiViewMode) {
                         e.preventDefault();
                         navigateModal(-1);
-                    } else if (e.key === 'ArrowRight' && !e.ctrlKey && !e.shiftKey && !tagEditorOpen) {
+                    } else if (e.key === 'ArrowRight' && !e.ctrlKey && !e.shiftKey && !tagEditorOpen && !multiViewMode) {
                         e.preventDefault();
                         navigateModal(1);
                     } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                         e.preventDefault();
                         saveTagsToFile();
+                    } else if (e.key === 'r' || e.key === 'R') {
+                        if (!tagEditorOpen) {
+                            e.preventDefault();
+                            rotateMedia(90);
+                        }
+                    } else if (e.key === 'c' || e.key === 'C') {
+                        if (!tagEditorOpen && !multiViewMode) {
+                            e.preventDefault();
+                            toggleMultiView();
+                        }
                     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                         const video = document.getElementById('modalVideo');
                         if (video && !tagEditorOpen) {
@@ -1590,42 +1772,190 @@ function generateHTML() {
             console.log('Tag removed:', tag, 'from', media.fileId);
         }
         
+        // Rotation Functions
+        function rotateMedia(degrees) {
+            if (multiViewMode) {
+                // Rotate all media in multi-view
+                multiViewSlots.forEach((slot, index) => {
+                    slot.rotation = (slot.rotation + degrees) % 360;
+                    const element = document.querySelector(\`#slot-\${index} img, #slot-\${index} video\`);
+                    if (element) {
+                        element.style.transform = \`rotate(\${slot.rotation}deg)\`;
+                    }
+                });
+            } else {
+                // Rotate single media
+                currentRotation = (currentRotation + degrees) % 360;
+                const element = document.getElementById('modalImage') || document.getElementById('modalVideo');
+                if (element) {
+                    element.style.transform = \`scale(\${modalZoom}) translate(\${modalPanX / modalZoom}px, \${modalPanY / modalZoom}px) rotate(\${currentRotation}deg)\`;
+                }
+            }
+        }
+        
+        function resetRotation() {
+            if (multiViewMode) {
+                multiViewSlots.forEach((slot, index) => {
+                    slot.rotation = 0;
+                    const element = document.querySelector(\`#slot-\${index} img, #slot-\${index} video\`);
+                    if (element) {
+                        element.style.transform = 'rotate(0deg)';
+                    }
+                });
+            } else {
+                currentRotation = 0;
+                updateModalTransform();
+            }
+        }
+        
+        // Multi-view Functions
+        function toggleMultiView() {
+            if (currentModalIndex === -1) return;
+            
+            // Check if current media is already in slots
+            const existingSlot = multiViewSlots.findIndex(s => s.index === currentModalIndex);
+            
+            if (existingSlot !== -1) {
+                showNotification('⚠️ This media is already in the comparison view', true);
+                return;
+            }
+            
+            if (multiViewSlots.length >= 4) {
+                showNotification('⚠️ Maximum 4 media can be compared at once', true);
+                return;
+            }
+            
+            // Add current media to slots
+            multiViewSlots.push({ index: currentModalIndex, rotation: currentRotation });
+            
+            if (!multiViewMode) {
+                multiViewMode = true;
+            }
+            
+            renderMultiView();
+            updateMultiViewControls();
+            showNotification(\`✅ Added to comparison (\${multiViewSlots.length}/4)\`);
+        }
+        
+        function clearMultiView() {
+            multiViewSlots = [];
+            multiViewMode = false;
+            
+            // Return to single view with current media
+            if (currentModalIndex !== -1) {
+                openModal(currentModalIndex);
+            }
+            
+            showNotification('✅ Comparison view cleared');
+        }
+        
+        function removeFromMultiView(slotIndex) {
+            multiViewSlots.splice(slotIndex, 1);
+            
+            if (multiViewSlots.length === 0) {
+                clearMultiView();
+            } else {
+                renderMultiView();
+                updateMultiViewControls();
+                showNotification(\`✅ Removed from comparison (\${multiViewSlots.length}/4)\`);
+            }
+        }
+        
+        function renderMultiView() {
+            const modalContent = document.getElementById('modalContent');
+            const slotCount = multiViewSlots.length;
+            
+            modalContent.className = \`modal-content multi-view count-\${slotCount}\`;
+            
+            modalContent.innerHTML = multiViewSlots.map((slot, index) => {
+                const media = filteredMedia[slot.index];
+                const mediaPath = media.path;
+                
+                const mediaElement = media.type === 'image' 
+                    ? \`<img src="\${mediaPath}" alt="\${media.name}" style="transform: rotate(\${slot.rotation}deg)">\`
+                    : \`<video src="\${mediaPath}" controls loop style="transform: rotate(\${slot.rotation}deg)"></video>\`;
+                
+                return \`
+                    <div class="media-slot" id="slot-\${index}">
+                        <div class="slot-label">\${index + 1}. \${media.name}</div>
+                        <button class="slot-close" onclick="removeFromMultiView(\${index})">&times;</button>
+                        \${mediaElement}
+                    </div>
+                \`;
+            }).join('');
+            
+            // Hide navigation arrows in multi-view
+            document.querySelector('.modal-prev').style.display = 'none';
+            document.querySelector('.modal-next').style.display = 'none';
+            document.querySelector('.edit-tags-btn').style.display = 'none';
+        }
+        
+        function updateMultiViewControls() {
+            const toggleBtn = document.getElementById('multiViewToggle');
+            const clearBtn = document.getElementById('clearMultiView');
+            
+            if (multiViewMode && multiViewSlots.length > 0) {
+                toggleBtn.textContent = \`+ Add to Compare (\${multiViewSlots.length}/4)\`;
+                toggleBtn.disabled = multiViewSlots.length >= 4;
+                clearBtn.style.display = 'inline-block';
+            } else {
+                toggleBtn.textContent = '+ Add to Compare';
+                toggleBtn.disabled = false;
+                clearBtn.style.display = 'none';
+            }
+        }
+        
         // Open modal viewer
         function openModal(index) {
             currentModalIndex = index;
             modalZoom = 1;
             modalPanX = 0;
             modalPanY = 0;
+            currentRotation = 0;
             tagEditorOpen = false;
+            
             const modal = document.getElementById('modal');
             const modalContent = document.getElementById('modalContent');
             const tagEditor = document.getElementById('tagEditor');
             tagEditor.style.display = 'none';
             
-            const media = filteredMedia[index];
-            const mediaPath = media.path;
+            // Show/hide controls based on mode
+            document.querySelector('.modal-prev').style.display = multiViewMode ? 'none' : 'block';
+            document.querySelector('.modal-next').style.display = multiViewMode ? 'none' : 'block';
+            document.querySelector('.edit-tags-btn').style.display = multiViewMode ? 'none' : 'block';
             
-            if (media.type === 'image') {
-                modalContent.innerHTML = \`<img id="modalImage" src="\${mediaPath}" alt="\${media.name}" onerror="handleMediaError(this, '\${media.name}')">\`;
+            if (multiViewMode) {
+                renderMultiView();
             } else {
-                modalContent.innerHTML = \`<video id="modalVideo" src="\${mediaPath}" controls autoplay onerror="handleMediaError(this, '\${media.name}')"></video>\`;
+                // Single view mode
+                modalContent.className = 'modal-content';
+                
+                const media = filteredMedia[index];
+                const mediaPath = media.path;
+                
+                if (media.type === 'image') {
+                    modalContent.innerHTML = \`<img id="modalImage" src="\${mediaPath}" alt="\${media.name}" onerror="handleMediaError(this, '\${media.name}')">\`;
+                } else {
+                    modalContent.innerHTML = \`<video id="modalVideo" src="\${mediaPath}" controls autoplay onerror="handleMediaError(this, '\${media.name}')"></video>\`;
+                }
+                
+                // Add event listeners after a short delay
+                setTimeout(() => {
+                    const modalElement = document.getElementById('modalImage') || document.getElementById('modalVideo');
+                    if (modalElement) {
+                        modal.addEventListener('wheel', handleModalZoom);
+                        modalElement.addEventListener('mousedown', startDrag);
+                        modalElement.addEventListener('mousemove', drag);
+                        modalElement.addEventListener('mouseup', endDrag);
+                        modalElement.addEventListener('mouseleave', endDrag);
+                        updateModalTransform();
+                    }
+                }, 100);
             }
             
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
-            
-            // Add event listeners after a short delay
-            setTimeout(() => {
-                const modalElement = document.getElementById('modalImage') || document.getElementById('modalVideo');
-                if (modalElement) {
-                    modal.addEventListener('wheel', handleModalZoom);
-                    modalElement.addEventListener('mousedown', startDrag);
-                    modalElement.addEventListener('mousemove', drag);
-                    modalElement.addEventListener('mouseup', endDrag);
-                    modalElement.addEventListener('mouseleave', endDrag);
-                    updateModalTransform();
-                }
-            }, 100);
+            updateMultiViewControls();
         }
         
         // Start dragging
@@ -1666,7 +1996,7 @@ function generateHTML() {
             const modalElement = document.getElementById('modalImage') || document.getElementById('modalVideo');
             if (!modalElement) return;
             
-            modalElement.style.transform = \`scale(\${modalZoom}) translate(\${modalPanX / modalZoom}px, \${modalPanY / modalZoom}px)\`;
+            modalElement.style.transform = \`scale(\${modalZoom}) translate(\${modalPanX / modalZoom}px, \${modalPanY / modalZoom}px) rotate(\${currentRotation}deg)\`;
         }
         
         // Handle modal zoom with scroll wheel
@@ -1711,14 +2041,19 @@ function generateHTML() {
             
             modal.classList.remove('active');
             modalContent.innerHTML = '';
+            modalContent.className = 'modal-content';
             tagEditor.style.display = 'none';
             document.body.style.overflow = 'auto';
             currentModalIndex = -1;
             modalZoom = 1;
             modalPanX = 0;
             modalPanY = 0;
+            currentRotation = 0;
             isDragging = false;
             tagEditorOpen = false;
+            
+            // Don't reset multi-view state when closing modal
+            // This allows user to keep comparing media across modal opens
         }
         
         // Navigate between media in modal
@@ -1758,7 +2093,9 @@ function generateHTML() {
                 (\${totalImages} images, \${totalVideos} videos) 
                 in \${categories.length} categories
                 with \${tags.length} unique tags
-                <span style="margin-left: 1rem; color: #4ecdc4;">Press Ctrl+S to save tag changes</span>
+                <span style="margin-left: 1rem; color: #4ecdc4;">
+                    Press Ctrl+S to save | R to rotate | C to compare
+                </span>
             \`;
         }
     </script>
@@ -1821,8 +2158,11 @@ console.log('   • Category dropdown: Select multiple categories');
 console.log('   • Tags dropdown: Filter by tags');
 console.log('   • Search bar: Filter by name, category, or tags');
 console.log('');
-console.log('MODAL VIEW:');
+console.log('MODAL VIEW (Single Media):');
 console.log('   • 🏷️ Edit Tags button: Open tag editor');
+console.log('   • Rotation buttons: Rotate 90° left/right or reset');
+console.log('   • R key: Rotate 90° clockwise');
+console.log('   • C key: Add to comparison view');
 console.log('   • Scroll Wheel: Zoom in/out');
 console.log('   • Click & Drag: Pan when zoomed');
 console.log('   • Left/Right Arrows: Navigate between media');
@@ -1830,8 +2170,18 @@ console.log('   • Up/Down Arrows: Adjust video volume');
 console.log('   • Ctrl+S (Cmd+S): Save/export tags to JSON file');
 console.log('   • Escape: Close modal or tag editor');
 console.log('');
+console.log('MULTI-VIEW MODE (Compare up to 4 media):');
+console.log('   • + Add to Compare button: Add current media to grid');
+console.log('   • Rotation buttons: Rotate all media simultaneously');
+console.log('   • R key: Rotate all media 90° clockwise');
+console.log('   • × button on each slot: Remove from comparison');
+console.log('   • Clear All button: Exit multi-view mode');
+console.log('   • Videos play simultaneously when in grid');
+console.log('');
 console.log('TAG EDITOR:');
-console.log('   • Type tag name and click Add or press Enter');
+console.log('   • Type tag name - autocomplete suggests existing tags');
+console.log('   • Arrow keys: Navigate autocomplete suggestions');
+console.log('   • Enter: Select suggestion or add new tag');
 console.log('   • Click × to remove a tag');
 console.log('   • Click suggestions to quickly add existing tags');
 console.log('   • Changes are immediate in the UI');
@@ -1840,7 +2190,9 @@ console.log('');
 console.log('💡 Workflow:');
 console.log('   1. Open gallery.html in your browser');
 console.log('   2. Browse media and add tags using the UI');
-console.log('   3. Press Ctrl+S to download the updated media-tags.json');
-console.log('   4. Replace the old media-tags.json with the downloaded one');
-console.log('   5. Re-run this script to regenerate with your new tags');
+console.log('   3. Use R to rotate media for better viewing');
+console.log('   4. Use C to compare up to 4 media side-by-side');
+console.log('   5. Press Ctrl+S to download the updated media-tags.json');
+console.log('   6. Replace the old media-tags.json with the downloaded one');
+console.log('   7. Re-run this script to regenerate with your new tags');
 console.log(`\n📂 Your media files remain in: ${absoluteMediaPath}`);
