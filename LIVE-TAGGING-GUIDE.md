@@ -130,7 +130,7 @@ your-project/
 ├── media-gallery-with-live-tagging.js  # Generator script
 ├── media-tags.json                      # Your tags database
 ├── gallery.html                         # Generated gallery (open this)
-└── khrayin LTS/                        # Your media folder
+└── media LTS/                        # Your media folder
     └── ...your media files...
 ```
 
