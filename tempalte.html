@@ -1080,35 +1080,30 @@
         }
         
         // Save tags to JSON file
-        async function saveTagsToFile() {
+async function saveTagsToFile() {
             try {
-                // Create tags object mapping fileId to tags array
                 const tagsData = {};
                 mediaData.forEach(media => {
                     if (media.tags && media.tags.length > 0) {
-                        // Force every array to be 100% unique right before saving!
                         tagsData[media.fileId] = [...new Set(media.tags)];
                     }
                 });
                 
-                // Convert to JSON string
-                const jsonContent = JSON.stringify(tagsData, null, 2);
+                // Send the payload securely to the local Node server
+                const response = await fetch('/save-tags', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(tagsData)
+                });
+
+                if (!response.ok) throw new Error('Server returned ' + response.status);
                 
-                // Create a blob and download link
-                const blob = new Blob([jsonContent], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'media-tags.json';
-                a.click();
-                URL.revokeObjectURL(url);
-                
-                showNotification('✅ Tags exported! Save the downloaded file as: ' + TAGS_FILE_PATH);
-                console.log('Tags saved:', tagsData);
+                // Quick, non-intrusive popup
+                showNotification('✅ Saved!');
                 
             } catch (error) {
                 console.error('Error saving tags:', error);
-                showNotification('❌ Error saving tags: ' + error.message, true);
+                showNotification('❌ Save failed. Is the server running?', true);
             }
         }
         // Initialize on page load
@@ -1650,6 +1645,7 @@ function addTag() {
             populateTagFilter();
             
             showNotification('✅ Tag added! Press Ctrl+S to save changes.');
+            saveTagsToFile();
         }
         
     function addSuggestedTag(tag) {
@@ -1666,6 +1662,7 @@ function addTag() {
             renderGallery();
             
             showNotification('✅ Tag added! Press Ctrl+S to save changes.');
+            saveTagsToFile();
         }
 
      function removeTag(tag) {
@@ -1680,6 +1677,7 @@ function addTag() {
             populateTagFilter();
             
             showNotification('✅ Tag removed! Press Ctrl+S to save changes.');
+            saveTagsToFile();
         }
         // Rotation Functions
         function rotateMedia(degrees) {
