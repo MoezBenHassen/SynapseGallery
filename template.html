@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Gallery with Tags</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="shortcut icon" href="/assets/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+    <link rel="manifest" href="/assets/site.webmanifest" />
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logoH" >
+                <img src="/assets/favicon.svg" width="50px" style="margin-right: 1%;">
+                <h1 style="margin: 0;">Media Gallery with Tags</h1>
+            </div>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Type:</label>
+                    <select id="typeFilter">
+                        <option value="all">All Media</option>
+                        <option value="image">Images Only</option>
+                        <option value="video">Videos Only</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Sort by:</label>
+                    <select id="sortOrder">
+                        <option value="date_desc">Date (Newest First)</option>
+                        <option value="date_asc">Date (Oldest First)</option>
+                    </select>
+                </div>
+                 <div class="filter-group">
+                    <label for="categoryFilterTrigger">Categories:</label>
+                    <div class="custom-select-wrapper" id="categoryFilterWrapper">
+                        <div class="custom-select-trigger" id="categoryFilterTrigger">
+                            <span>All Categories</span>
+                        </div>
+                        <div class="custom-select-options" id="categoryFilterOptions"></div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label for="tagFilterTrigger">Tags:</label>
+                    <div class="custom-select-wrapper" id="tagFilterWrapper">
+                        <div class="custom-select-trigger" id="tagFilterTrigger">
+                            <span>All Tags</span>
+                        </div>
+                        <div class="custom-select-options" id="tagFilterOptions"></div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>Search:</label>
+                    <input type="text" id="searchInput" placeholder="Search by name or category...">
+                </div>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="adjustZoom(-1)">−</button>
+                    <span class="zoom-level" id="zoomLevel">100%</span>
+                    <button class="zoom-btn" onclick="adjustZoom(1)">+</button>
+                </div>
+            </div>
+            <div class="stats" id="stats"></div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div class="gallery" id="gallery"></div>
+        <div class="no-results" id="noResults" style="display: none;">
+            No media files found matching your criteria.
+        </div>
+    </div>
+    
+    <div class="modal" id="modal">
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <button class="modal-nav modal-prev" onclick="navigateModal(-1)">&#8249;</button>
+        <button class="modal-nav modal-next" onclick="navigateModal(1)">&#8250;</button>
+        <button class="edit-tags-btn" onclick="toggleTagEditor()">🏷️ Edit Tags</button>
+        
+        <div class="rotation-controls" id="rotationControls">
+            <button class="rotation-btn" onclick="rotateMedia(-90)" title="Rotate Left">↶ 90°</button>
+            <button class="rotation-btn" onclick="rotateMedia(90)" title="Rotate Right">↷ 90°</button>
+            <button class="rotation-btn" onclick="resetRotation()" title="Reset">↺ Reset</button>
+        </div>
+        
+        <div class="multi-view-controls" id="multiViewControls">
+            <button class="multi-view-btn" onclick="toggleMultiView()" id="multiViewToggle">+ Add to Moodboard</button>
+            <button class="multi-view-btn" onclick="clearMultiView()" id="clearMultiView" style="display: none;">Clear All</button>
+        </div>
+        
+        <div class="modal-content" id="modalContent"></div>
+        <div class="volume-indicator" id="volumeIndicator"></div>
+        <div class="tag-editor" id="tagEditor" style="display: none;">
+            <div class="tag-editor-header">
+                <span class="tag-editor-title">Edit Tags</span>
+                <button class="tag-editor-close" onclick="toggleTagEditor()">&times;</button>
+            </div>
+            <div class="tag-input-group">
+                <div class="tag-input-wrapper">
+                    <input type="text" class="tag-input" id="tagInput" placeholder="Enter tag name..." autocomplete="off">
+                    <div class="tag-autocomplete" id="tagAutocomplete"></div>
+                </div>
+                <button class="tag-add-btn" onclick="addTag()">Add</button>
+            </div>
+            <div class="current-tags" id="currentTags"></div>
+            <div class="tag-suggestions">
+                <div class="tag-suggestions-title">Suggestions (click to add):</div>
+                <div id="tagSuggestions"></div>
+            </div>
+        </div>
+    </div>
+    
+<script>
+        window.GALLERY_DATA = {{MEDIA_DATA}};
+        window.TAGS_FILE_PATH = '{{TAGS_FILE_PATH}}';
+    </script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

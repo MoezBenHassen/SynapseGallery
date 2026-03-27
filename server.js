@@ -16,6 +16,7 @@ const CONFIG = {
 
 // Middleware
 app.use(express.json()); // Allows server to read JSON from the browser
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/media', express.static(path.resolve(CONFIG.mediaFolder))); // Serves your media files
 
 // --- Helper Functions ---
